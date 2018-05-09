@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "rabbitmq-seminar-cs": {
+      "commandName": "Project",
+      "commandLineArgs": "lesson1"
+    }
+  }
+}
