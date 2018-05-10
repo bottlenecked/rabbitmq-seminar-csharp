@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading;
 using RabbitMQSeminar;
 
-namespace RabbitmqSeminar.Lessons
+namespace RabbitmqSeminar.Runnables
 {
     /// <summary>
     /// This lesson should make it clear that messages are lost when connection problems occur.
@@ -27,11 +27,11 @@ namespace RabbitmqSeminar.Lessons
     /// successfully published message 8
     /// successfully published message 9
     /// </summary>
-    public class Lesson1_LostMessages : ILesson
+    public class Lesson1_LostMessages : IRunnable
     {
         public void Run()
         {
-            Console.WriteLine("Runnig lesson1. Press CTRL+C to exit.");
+            Console.WriteLine("Running lesson1. Press CTRL+C to exit.");
             var connection = RabbitConnection.Instance;
             using (var channel = connection.CreateModel())
             {

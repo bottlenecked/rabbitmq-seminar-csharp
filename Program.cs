@@ -1,5 +1,5 @@
 ﻿using System;
-using RabbitmqSeminar.Lessons;
+using RabbitmqSeminar.Runnables;
 
 namespace RabbitMQSeminar
 {
@@ -9,18 +9,18 @@ namespace RabbitMQSeminar
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Please enter a lesson name as parameter, eg. \"lesson1\"");
+                Console.WriteLine("Please enter a task name as parameter, eg. \"lesson1\"");
                 return -1;
             }
 
-            ILesson lesson = Lessons.GetLesson(args[0]);
-            if (lesson == null)
+            IRunnable runnable = Runnables.GetRunnable(args[0]);
+            if (runnable == null)
             {
-                Console.WriteLine($"No lesson named \"{args[0]}\" found. Please give a valid lesson name, eg \"lesson1\"");
+                Console.WriteLine($"No task named \"{args[0]}\" found. Please give a valid task name, eg \"lesson1\"");
                 return -1;
             }
 
-            lesson.Run();
+            runnable.Run();
             return 0;
         }
     }
