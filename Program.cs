@@ -19,7 +19,7 @@ namespace RabbitMQSeminar
                 Console.WriteLine($"No task named \"{args[0]}\" found. Please give a valid task name, eg \"lesson1\"");
                 return -1;
             }
-
+            Console.WriteLine(runnable.Announcement);
             runnable.Run();
             return 0;
         }

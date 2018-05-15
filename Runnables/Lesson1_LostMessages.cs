@@ -29,9 +29,10 @@ namespace RabbitmqSeminar.Runnables
     /// </summary>
     public class Lesson1_LostMessages : IRunnable
     {
+        public string Announcement => "Running lesson1. Press CTRL+C to exit.";
+
         public void Run()
         {
-            Console.WriteLine("Running lesson1. Press CTRL+C to exit.");
             var connection = RabbitConnection.Instance;
             using (var channel = connection.CreateModel())
             {
@@ -57,7 +58,6 @@ namespace RabbitmqSeminar.Runnables
                     Thread.Sleep(5000);
                 }
             }
-
         }
     }
 }
