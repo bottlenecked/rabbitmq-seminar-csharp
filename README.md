@@ -16,4 +16,4 @@ Prepare your work environment by following these instructions
    * `git clone https://github.com/bottlenecked/rabbitmq-seminar-csharp.git`
 1. _Create you own branch_. Switch to the newly created folder and create a branch out of the commit for the first exercise.
    * `cd rabbitmq-seminar-csharp`
-   * `git checkout -b myrabbit 05a8d56`
+   * `git checkout -b myrabbit 1a1ce84`

@@ -18,16 +18,17 @@ namespace RabbitmqSeminar.Runnables
             // The queue should be durable but not exclusive/autodeleted
 
             //First grab the connection and open a channel
-            ...
-            using (...)
+            var connection = RabbitConnection.Instance;
+            using (var channel = connection.CreateModel())
             {
                 //Then create the orders_in queue
-                var queue = ...
+                var queue = channel.QueueDeclare("orders_in", exclusive: false, durable: true, autoDelete: false);
                 while (true)
                 {
                     //read the order and send it to rabbitmq
                     var order = GetOrder();
-                    ...
+                    var bytes = Encoding.UTF8.GetBytes(order);
+                    channel.BasicPublish(string.Empty, queue, channel.CreateBasicProperties(), bytes);
                 }
             }
         }
