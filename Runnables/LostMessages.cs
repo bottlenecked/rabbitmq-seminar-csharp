@@ -27,9 +27,9 @@ namespace RabbitmqSeminar.Runnables
     /// successfully published message 8
     /// successfully published message 9
     /// </summary>
-    public class Lesson1_LostMessages : IRunnable
+    public class LostMessages : IRunnable
     {
-        public string Announcement => "Running lesson1. Press CTRL+C to exit.";
+        public string Announcement => "Running Lost messages task. Press CTRL+C to exit.";
 
         public void Run()
         {

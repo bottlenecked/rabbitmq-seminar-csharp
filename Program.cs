@@ -9,14 +9,14 @@ namespace RabbitMQSeminar
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Please enter a task name as parameter, eg. \"lesson1\"");
+                Console.WriteLine("Please enter a task name as parameter, eg. \"lostmessages\"");
                 return -1;
             }
 
             IRunnable runnable = Runnables.GetRunnable(args[0]);
             if (runnable == null)
             {
-                Console.WriteLine($"No task named \"{args[0]}\" found. Please give a valid task name, eg \"lesson1\"");
+                Console.WriteLine($"No task named \"{args[0]}\" found. Please give a valid task name, eg \"lostmessages\"");
                 return -1;
             }
             Console.WriteLine(runnable.Announcement);
