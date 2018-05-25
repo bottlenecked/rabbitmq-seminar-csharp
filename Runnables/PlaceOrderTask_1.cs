@@ -13,7 +13,6 @@ namespace RabbitmqSeminar.Runnables
         {
             WelcomeMessage();
 
-            // YOUR
             // Add code here that will take an order and will send it to the orders_in queue
             // The queue should be durable but not exclusive/autodeleted
 
@@ -27,7 +26,11 @@ namespace RabbitmqSeminar.Runnables
                 //using the queue name as the routing key.
 
                 //So now instead of declaring a queue, we will be declaring an exchange named 'orders_direct_exchange' and publish there
-                ...
+
+                const string exchangeName = "orders_direct_exchange";
+                channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
+                    autoDelete: false, arguments: null);
+
                 while (true)
                 {
                     //read the order and send it to rabbitmq
@@ -35,7 +38,8 @@ namespace RabbitmqSeminar.Runnables
                     var bytes = Encoding.UTF8.GetBytes(order);
 
                     //publish to the exchange created above using an empty string as routing key.
-                    channel.BasicPublish...
+                    channel.BasicPublish(exchange: exchangeName, routingKey: string.Empty,
+                        basicProperties: channel.CreateBasicProperties(), body: bytes);
                 }
             }
         }

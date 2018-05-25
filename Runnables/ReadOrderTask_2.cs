@@ -18,16 +18,19 @@ namespace RabbitmqSeminar.Runnables
             //STEP 0.1: open a channel in the connection
             using (var channel = connection.CreateModel())
             {
-                //STEP 1: declare the orders_in queue using THE SAME configuration as before
-                //(We need to declare the queue in the consumer as well as the producer!)
+                //STEP 1: declare the orders_in queue. What has now changed is that the queue is declared by the consumer only,
+                //since the publisher now publishes to the exchange 'orders_direct_exchange' and not 'directly' to our queue.
+
                 var queue = channel.QueueDeclare("orders_in", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
                 //STEP 1.1: declare the orders_direct_exchange exchange like the publisher did, since we must be sure that the exchange
                 //exists before binding our queue to it.
-                ...
+                const string exchangeName = "orders_direct_exchange";
+                channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
+                    autoDelete: false, arguments: null);
 
                 //STEP 1.2: Now we need to bind the queue to the exchange (we create a binding)
-                channel.QueueBind...
+                channel.QueueBind(queue, exchangeName, routingKey: string.Empty, arguments: null);
 
                 //STEP 2: Create the consumer
                 var consumer = new EventingBasicConsumer(channel);
