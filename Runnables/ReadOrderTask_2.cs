@@ -22,6 +22,13 @@ namespace RabbitmqSeminar.Runnables
                 //(We need to declare the queue in the consumer as well as the producer!)
                 var queue = channel.QueueDeclare("orders_in", durable: true, exclusive: false, autoDelete: false, arguments: null);
 
+                //STEP 1.1: declare the orders_direct_exchange exchange like the publisher did, since we must be sure that the exchange
+                //exists before binding our queue to it.
+                ...
+
+                //STEP 1.2: Now we need to bind the queue to the exchange (we create a binding)
+                channel.QueueBind...
+
                 //STEP 2: Create the consumer
                 var consumer = new EventingBasicConsumer(channel);
 

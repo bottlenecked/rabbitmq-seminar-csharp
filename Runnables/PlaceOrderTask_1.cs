@@ -21,14 +21,21 @@ namespace RabbitmqSeminar.Runnables
             var connection = RabbitConnection.Instance;
             using (var channel = connection.CreateModel())
             {
-                //Then create the orders_in queue
-                var queue = channel.QueueDeclare("orders_in", exclusive: false, durable: true, autoDelete: false);
+                //We will now use an exchange to publish messages. When creating a queue it is automatically
+                //bound to the default direct exchange, and that is why we were under the illusion that we were publishing
+                //'directly' to a queue. What the client does under the covers is publish to the direct ("[empty name]") exchange
+                //using the queue name as the routing key.
+
+                //So now instead of declaring a queue, we will be declaring an exchange named 'orders_direct_exchange' and publish there
+                ...
                 while (true)
                 {
                     //read the order and send it to rabbitmq
                     var order = GetOrder();
                     var bytes = Encoding.UTF8.GetBytes(order);
-                    channel.BasicPublish(string.Empty, queue, channel.CreateBasicProperties(), bytes);
+
+                    //publish to the exchange created above using an empty string as routing key.
+                    channel.BasicPublish...
                 }
             }
         }
