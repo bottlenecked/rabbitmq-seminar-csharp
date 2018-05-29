@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -8,7 +9,14 @@ namespace RabbitmqSeminar.Runnables
 {
     internal class ReadOrderTask : IRunnable
     {
-        public string Announcement => "Consume orders from the orders_in queue";
+        private readonly IEnumerable<string> _args;
+
+        public ReadOrderTask(IEnumerable<string> args)
+        {
+            _args = args;
+        }
+
+        public string Announcement => "Consume orders from the orders_in queue. PRESS CTRL+C TO EXIT";
 
         public void Run()
         {
@@ -42,7 +50,6 @@ namespace RabbitmqSeminar.Runnables
                 channel.BasicConsume(queue, autoAck: false, consumerTag: string.Empty, noLocal: false, exclusive: false,
                     arguments: null, consumer: consumer);
 
-                Console.WriteLine("PRESS ANY KEY TO EXIT");
                 Console.ReadKey();
             }
         }

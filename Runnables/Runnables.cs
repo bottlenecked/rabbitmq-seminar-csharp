@@ -15,16 +15,25 @@ namespace RabbitmqSeminar.Runnables
                 .Where(t => typeof(IRunnable).IsAssignableFrom(t));
         }
 
-        public static IRunnable GetRunnable(string name)
+        public static Type GetRunnable(string name)
         {
-            var lessonType = GetRunnables()
+            var runnableType = GetRunnables()
                 .FirstOrDefault(t => t.Name.IndexOf(name, StringComparison.InvariantCultureIgnoreCase) > -1);
-            if (lessonType == null)
+            return runnableType;
+        }
+
+        public static IRunnable CreateRunnable(Type t, IEnumerable<string> args)
+        {
+            //try to instantiate using a ctor that takes an argument list (from the command line).
+            //If that fails, try using the default constructor
+            var ctor = t.GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+                .FirstOrDefault(c => c.GetParameters().Any());
+            if (ctor != null)
             {
-                return null;
+                return (IRunnable) ctor.Invoke(new object[] {args});
             }
-            var lesson = (IRunnable) Activator.CreateInstance(lessonType);
-            return lesson;
+            var runnable = (IRunnable) Activator.CreateInstance(t);
+            return runnable;
         }
     }
 }

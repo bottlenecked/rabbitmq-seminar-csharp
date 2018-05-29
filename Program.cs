@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using RabbitmqSeminar.Runnables;
 
 namespace RabbitMQSeminar
@@ -13,12 +14,13 @@ namespace RabbitMQSeminar
                 return -1;
             }
 
-            IRunnable runnable = Runnables.GetRunnable(args[0]);
-            if (runnable == null)
+            var t = Runnables.GetRunnable(args[0]);
+            if (t == null)
             {
                 Console.WriteLine($"No task named \"{args[0]}\" found. Please give a valid task name, eg \"lostmessages\"");
                 return -1;
             }
+            var runnable = Runnables.CreateRunnable(t, args.Skip(1));
             Console.WriteLine(runnable.Announcement);
             runnable.Run();
             return 0;
