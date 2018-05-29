@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 using RabbitMQ.Client;
 using RabbitMQSeminar;
@@ -36,7 +35,10 @@ namespace RabbitmqSeminar.Runnables
                     {
                         //you need to set the headers dict, not add because it does not exist.
                         //What other stuff can you set through props? Check VS autocompletion out!
-                        props.Headers = ...
+                        props.Headers = new Dictionary<string, object>
+                        {
+                            {"x-special", special}
+                        };
                     }
                     channel.BasicPublish(exchange: exchangeName, routingKey: category,
                         basicProperties: props, body: bytes);

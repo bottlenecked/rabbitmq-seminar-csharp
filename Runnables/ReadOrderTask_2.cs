@@ -50,11 +50,11 @@ namespace RabbitmqSeminar.Runnables
         {
             var order = Encoding.UTF8.GetString(args.Body);
             var txt = $"Received [{_category}] order: {order}";
-            //Try to grab the x-special header, and if found append the special request to the printed message.
-            //Question: what is the underlying type of special?
-            if (...)
+            //Try to grab the x-special header, and if found append the
+            //special request to the printed message. Question: what is the underlying type of special?
+            if (args.BasicProperties.IsHeadersPresent() && args.BasicProperties.Headers.TryGetValue("x-special", out var special))
             {
-                ...
+                var specialTxt = Encoding.UTF8.GetString((byte[])special);
                 txt += $", special request: {specialTxt}";
             }
             Console.WriteLine(txt);
