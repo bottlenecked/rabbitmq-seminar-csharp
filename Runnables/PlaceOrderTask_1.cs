@@ -21,7 +21,8 @@ namespace RabbitmqSeminar.Runnables
                 //between food and drinks to help speed up order preparation (cooks use different workbenches from barmen)
 
                 const string exchangeName = "orders_direct_exchange";
-                channel.ExchangeDeclare(...);
+                channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
+                    autoDelete: false, arguments: null);
 
                 while (true)
                 {
@@ -30,7 +31,8 @@ namespace RabbitmqSeminar.Runnables
                     var bytes = Encoding.UTF8.GetBytes(item);
 
                     //publish to the exchange created above using the item category as the routing key
-                    channel.BasicPublish(...);
+                    channel.BasicPublish(exchange: exchangeName, routingKey: category,
+                        basicProperties: channel.CreateBasicProperties(), body: bytes);
                     Console.WriteLine("Order sent!");
                 }
             }

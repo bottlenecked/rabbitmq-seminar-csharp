@@ -27,11 +27,12 @@ namespace RabbitmqSeminar.Runnables
             {
                 //FIRST DIFFERENCE: declare a new '[category]_in' queue as before
                 var queueName = $"{_category}_in";
-                var queue = channel.QueueDeclare(...);
+                var queue = channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
                 //declare the exchange as before
                 const string exchangeName = "orders_direct_exchange";
-                channel.ExchangeDeclare(...);
+                channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
+                    autoDelete: false, arguments: null);
 
                 //HERE IS THE OTHER DIFFERENCE: we need to bind the queue to the exchange using the category
                 //as the routing key
@@ -41,7 +42,8 @@ namespace RabbitmqSeminar.Runnables
 
                 consumer.Received += OnReceived;
 
-                channel.BasicConsume(...);
+                channel.BasicConsume(queue, autoAck: false, consumerTag: string.Empty, noLocal: false, exclusive: false,
+                    arguments: null, consumer: consumer);
 
                 Console.ReadKey();
             }
