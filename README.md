@@ -17,3 +17,10 @@ Prepare your work environment by following these instructions
 1. _Create you own branch_. Switch to the newly created folder and create a branch out of the commit for the first exercise.
    * `cd rabbitmq-seminar-csharp`
    * `git checkout -b myrabbit 1a1ce84`
+
+### How to proceed
+Look at the commit history. You will see pairs of commits named "Exercise: blahblah" and "Soultion: blahblah".
+Use `git checkout [commit-sha]` to checkout the "Exercise" commits and work on the solutions.
+When you are done, you can checkout the solution (perhaps by commiting your own and then comparing the diff).
+
+Remember to use rabbitmq admin to check that queues and exchanges are created/deleted as expected, and that there are no unexpected messages left in the queues.
