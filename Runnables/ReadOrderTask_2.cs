@@ -25,17 +25,15 @@ namespace RabbitmqSeminar.Runnables
 
             using (var channel = connection.CreateModel())
             {
-                //FIRST DIFFERENCE: declare a new '[category]_in' queue as before
-                var queueName = $"{_category}_in";
-                var queue = channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+                //This time we are going to declare a unique queue per consumer, that will die as soon as we disconnect.
+                //Also all category messages (eg. food) will be copied to all consumers
+                var queueName = $"{_category}_{Guid.NewGuid():N}";
+                var queue = channel.QueueDeclare(queue: queueName, durable: false, exclusive: true, autoDelete: true, arguments: null);
 
-                //declare the exchange as before
                 const string exchangeName = "orders_direct_exchange";
                 channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
                     autoDelete: false, arguments: null);
 
-                //HERE IS THE OTHER DIFFERENCE: we need to bind the queue to the exchange using the category
-                //as the routing key
                 channel.QueueBind(queue, exchangeName, routingKey: _category, arguments: null);
 
                 var consumer = new EventingBasicConsumer(channel);

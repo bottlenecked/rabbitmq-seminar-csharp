@@ -17,8 +17,7 @@ namespace RabbitmqSeminar.Runnables
             var connection = RabbitConnection.Instance;
             using (var channel = connection.CreateModel())
             {
-                //Again, we are going to use a direct exchange, only this time we need to differentiate
-                //between food and drinks to help speed up order preparation (cooks use different workbenches from barmen)
+                //Nothing changed in the producer
 
                 const string exchangeName = "orders_direct_exchange";
                 channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
@@ -26,11 +25,9 @@ namespace RabbitmqSeminar.Runnables
 
                 while (true)
                 {
-                    //read the order and send it to rabbitmq
                     var (category, item) = GetOrder();
                     var bytes = Encoding.UTF8.GetBytes(item);
 
-                    //publish to the exchange created above using the item category as the routing key
                     channel.BasicPublish(exchange: exchangeName, routingKey: category,
                         basicProperties: channel.CreateBasicProperties(), body: bytes);
                     Console.WriteLine("Order sent!");
