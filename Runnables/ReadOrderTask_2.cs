@@ -17,7 +17,7 @@ namespace RabbitmqSeminar.Runnables
             _category = args.FirstOrDefault()?.Trim() ?? string.Empty;
         }
 
-        public string Announcement => $"Consuming [{_category}] orders from the orders_in queue. PRESS CTRL+C TO EXIT";
+        public string Announcement => $"Consuming [{_category}] orders. PRESS CTRL+C TO EXIT";
 
         public void Run()
         {
@@ -25,10 +25,9 @@ namespace RabbitmqSeminar.Runnables
 
             using (var channel = connection.CreateModel())
             {
-                //This time we are going to declare a unique queue per consumer, that will die as soon as we disconnect.
-                //Also all category messages (eg. food) will be copied to all consumers
-                var queueName = $"{_category}_{Guid.NewGuid():N}";
-                var queue = channel.QueueDeclare(queue: queueName, durable: false, exclusive: true, autoDelete: true, arguments: null);
+                //We are back to declaring a static queue to help with round-robbying messages across multiple consumers
+                var queueName = $"{_category}_in";
+                var queue = channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
                 const string exchangeName = "orders_direct_exchange";
                 channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
@@ -50,7 +49,15 @@ namespace RabbitmqSeminar.Runnables
         private void OnReceived(object consumer, BasicDeliverEventArgs args)
         {
             var order = Encoding.UTF8.GetString(args.Body);
-            Console.WriteLine($"Received [{_category}] order: {order}");
+            var txt = $"Received [{_category}] order: {order}";
+            //Try to grab the x-special header, and if found append the special request to the printed message.
+            //Question: what is the underlying type of special?
+            if (...)
+            {
+                ...
+                txt += $", special request: {specialTxt}";
+            }
+            Console.WriteLine(txt);
             Console.WriteLine();
             ((IBasicConsumer)consumer).Model.BasicAck(args.DeliveryTag, multiple: false);
         }
