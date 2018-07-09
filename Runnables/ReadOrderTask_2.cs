@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQSeminar;
@@ -25,7 +26,6 @@ namespace RabbitmqSeminar.Runnables
 
             using (var channel = connection.CreateModel())
             {
-                //We are back to declaring a static queue to help with round-robbying messages across multiple consumers
                 var queueName = $"{_category}_in";
                 var queue = channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
 
@@ -37,7 +37,8 @@ namespace RabbitmqSeminar.Runnables
 
                 var consumer = new EventingBasicConsumer(channel);
 
-                consumer.Received += OnReceived;
+                //introduce an artificial delay to simulate a busy server
+                consumer.Received += (o, a) => Task.Delay(TimeSpan.FromSeconds(7)).ContinueWith(_ => OnReceived(o, a));
 
                 channel.BasicConsume(queue, autoAck: false, consumerTag: string.Empty, noLocal: false, exclusive: false,
                     arguments: null, consumer: consumer);
@@ -50,16 +51,37 @@ namespace RabbitmqSeminar.Runnables
         {
             var order = Encoding.UTF8.GetString(args.Body);
             var txt = $"Received [{_category}] order: {order}";
-            //Try to grab the x-special header, and if found append the
-            //special request to the printed message. Question: what is the underlying type of special?
             if (args.BasicProperties.IsHeadersPresent() && args.BasicProperties.Headers.TryGetValue("x-special", out var special))
             {
                 var specialTxt = Encoding.UTF8.GetString((byte[])special);
                 txt += $", special request: {specialTxt}";
             }
+
+            var channel = ((IBasicConsumer) consumer).Model;
+
+            //We now need to send an acknowledgement back to the producer of this message
+            Reply(channel, args);
+
             Console.WriteLine(txt);
             Console.WriteLine();
-            ((IBasicConsumer)consumer).Model.BasicAck(args.DeliveryTag, multiple: false);
+            channel.BasicAck(args.DeliveryTag, multiple: false);
+        }
+
+        private static void Reply(IModel channel, BasicDeliverEventArgs args)
+        {
+            //grab the reply-to queue name from the headers
+            var replyQueue = args.BasicProperties.ReplyTo;
+            //also grab the correlation id
+            var correlationId = args.BasicProperties.CorrelationId;
+            if (!string.IsNullOrEmpty(replyQueue) && !string.IsNullOrEmpty(correlationId))
+            {
+                //we need to set this message's correlation id to the original correlation id
+                var props = channel.CreateBasicProperties();
+                props.CorrelationId = correlationId;
+                var body = Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString("T"));
+                //and finally publish the response back
+                channel.BasicPublish(exchange: string.Empty, routingKey: replyQueue, mandatory: false, basicProperties: props, body: body);
+            }
         }
     }
 }

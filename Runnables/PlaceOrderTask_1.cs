@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using RabbitMQSeminar;
 
 namespace RabbitmqSeminar.Runnables
@@ -10,6 +12,8 @@ namespace RabbitmqSeminar.Runnables
     internal class PlaceOrderTask : IRunnable
     {
         public string Announcement => "Running place order task. Press CTR+C to exit";
+
+        private readonly ConcurrentDictionary<string, Order> _orders = new ConcurrentDictionary<string, Order>();
 
         public void Run()
         {
@@ -23,31 +27,38 @@ namespace RabbitmqSeminar.Runnables
                 channel.ExchangeDeclare(exchange: exchangeName, type: "direct", durable: true,
                     autoDelete: false, arguments: null);
 
+                //This time, besides placing the order we will need confirmation that our order was actually received and is being prepared.
+                //One way to do this is using the RPC pattern (there are other ways we could do this with RabbitMQ though)
+                var replyQueueName = ListenForConfirmation(channel);
+
                 while (true)
                 {
-                    var (category, item, special) = GetOrder();
-                    var bytes = Encoding.UTF8.GetBytes(item);
+                    //we need to keep sent messages in a dictionary to be able to identify them on response
+                    var order = GetOrder();
+                    string correlationId = Guid.NewGuid().ToString();
+                    _orders.AddOrUpdate(correlationId, order, (key, prev) => order);
 
-                    //we now need to get any special request and place it in our custom "x-special" header
+                    var bytes = Encoding.UTF8.GetBytes(order.Item);
 
                     var props = channel.CreateBasicProperties();
-                    if (!string.IsNullOrEmpty(special))
+                    //we need to set the reply-to queue and correlation id
+                    props.ReplyTo = replyQueueName;
+                    props.CorrelationId = correlationId;
+                    if (!string.IsNullOrEmpty(order.Special))
                     {
-                        //you need to set the headers dict, not add because it does not exist.
-                        //What other stuff can you set through props? Check VS autocompletion out!
                         props.Headers = new Dictionary<string, object>
                         {
-                            {"x-special", special}
+                            {"x-special", order.Special}
                         };
                     }
-                    channel.BasicPublish(exchange: exchangeName, routingKey: category,
+                    channel.BasicPublish(exchange: exchangeName, routingKey: order.Category,
                         basicProperties: props, body: bytes);
-                    Console.WriteLine("Order sent!");
+                    Console.WriteLine($"Order sent on {DateTime.UtcNow:T}");
                 }
             }
         }
 
-        private static (string Category, string Item, string Special) GetOrder()
+        private static Order GetOrder()
         {
             while (true)
             {
@@ -62,11 +73,11 @@ namespace RabbitmqSeminar.Runnables
                 {
                     if (order.Length == 2)
                     {
-                        return (Category: order[0], Item: order[1], Special: null);
+                        return new Order {Category = order[0], Item = order[1]};
                     }
                     if (order.Length == 3)
                     {
-                        return (Category: order[0], Item: order[1], Special: order[2]);
+                        return new Order {Category = order[0], Item = order[1], Special = order[2]};
                     }
                 }
                 Console.Error.WriteLine("Invalid order.");
@@ -78,6 +89,48 @@ namespace RabbitmqSeminar.Runnables
             Console.WriteLine("----------------------");
             Console.WriteLine("Welcome to Burgerrrrr Mania!");
             Console.WriteLine();
+        }
+
+        private string ListenForConfirmation(IModel channel)
+        {
+            //so what we need is to create an anonymous queue and consume from there
+            var queueName = channel.QueueDeclare(durable: false, exclusive: true, autoDelete: true);
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += OnConfirmationReceived;
+            var _ = channel.BasicConsume(queueName, autoAck: false, consumer: consumer);
+            return queueName;
+        }
+
+        private void OnConfirmationReceived(object consumer, BasicDeliverEventArgs args)
+        {
+            var channel = ((IBasicConsumer) consumer).Model;
+
+            //read the corellation id header
+            var correlationId = args.BasicProperties.CorrelationId;
+            //lookup the dictionary for the message
+            if (_orders.TryRemove(correlationId, out var order))
+            {
+                var serverTime = Encoding.UTF8.GetString(args.Body);
+                Console.WriteLine($"Confirmed: order {order} was successfully received on {serverTime}");
+            }
+            else
+            {
+                Console.Error.WriteLine($"Received confirmation for unknown order {correlationId}");
+            }
+            //send ack
+            channel.BasicAck(args.DeliveryTag, multiple: false);
+        }
+
+        private class Order
+        {
+            public string Category { get; set; }
+            public string Item { get; set; }
+            public string Special { get; set; }
+
+            public override string ToString()
+            {
+                return $"{Category}:{Item}:{Special}";
+            }
         }
     }
 }
